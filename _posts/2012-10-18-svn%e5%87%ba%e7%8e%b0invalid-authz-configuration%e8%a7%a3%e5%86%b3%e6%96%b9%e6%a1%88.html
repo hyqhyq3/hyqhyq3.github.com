@@ -1,0 +1,16 @@
+---
+layout: post
+title: SVN出现Invalid authz configuration解决方案
+---
+在修改配置authz后，如果authz包含错误，那么会在客户端提示Invalid authz configuration。
+在客户端并没有显示问题的详细原因，但是在服务器端有一个工具可以检查authz的语法<strong><em>svnauthz-validate</em></strong>
+
+
+
+使用方法如下：
+
+
+
+<pre><code>$ svnauthz-validate /srv/svn/conf/authz
+svnauthz-validate: An authz rule refers to group '@e2et', which is undefined
+</code></pre>

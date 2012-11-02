@@ -1,0 +1,22 @@
+---
+layout: post
+title: PHP生成配置文件
+---
+如果要用php生成配置文件，特别是包含数据库密码的配置文件，由于不能存入数据库，并且不能保存成json格式（可能被浏览器直接下载），那么可以存为php格式
+<pre class="lang:php decode:true" title="生成配置文件">&lt;?php
+$config = array(
+  'host'=&gt;'localhost',
+  'username'=&gt;'root',
+  'password'=&gt;'',
+  'database'=&gt;'test',
+);
+
+$str = '&lt;?php return ' . var_export($config, true) . ';';
+file_put_contents('config.php', $str);</pre>
+&nbsp;
+<pre class="lang:php decode:true " title="读取配置文件">&lt;?php
+
+$config = require('config.php');
+mysql_connect($config['host'], $config['username'], $config['password']);
+mysql_select_db($config['database']);</pre>
+&nbsp;

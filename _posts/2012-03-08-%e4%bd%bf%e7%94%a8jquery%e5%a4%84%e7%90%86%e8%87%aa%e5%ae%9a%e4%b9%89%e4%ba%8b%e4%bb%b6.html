@@ -1,0 +1,5 @@
+---
+layout: post
+title: 使用JQuery处理自定义事件
+---
+<p>前几天用到了Javascript的事件，我按照ActionScript的语法写了dispatchEvent和addEventListener。在Chrome里面运行正常，在IE里面出错了。我查了一下资料，发现IE的事件和Chrome相差很大（又是这蛋疼的兼容性问题）。</p>  <p>正好项目中用到了JQuery，而JQuery里面有处理Event的模块，那就不自己去弄兼容性的问题了。</p>  <p>添加事件监听   <br />$(&quot;body&quot;).bind(&quot;eventType&quot;,function(event, data){    <br />alert(data.msg);    <br />})</p>  <p>分发事件   <br />$(&quot;body&quot;).trigger(&quot;eventType&quot;, {msg:&quot;hello&quot;})</p>

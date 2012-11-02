@@ -1,0 +1,30 @@
+---
+layout: post
+title: 在Flash中获取不到参数的问题
+---
+有时候发现loaderInfo为null，不能取到数据，很是奇怪。后来在FABridge的源码里面发现了以下内容
+[as]            var t:Timer = new Timer(100);
+            var timerFunc:Function = function(e:TimerEvent):void
+            {
+                if(baseObject.root != null)
+                {
+                    try
+                    {
+                        bCanGetParams = true;
+                        var params:Object = baseObject.root.loaderInfo.parameters;
+                    }
+                    catch (err:Error)
+                    {
+                        bCanGetParams = false;
+                    }
+                    if (bCanGetParams)
+                    {
+                        t.removeEventListener(TimerEvent.TIMER, timerFunc);
+                        t.stop();
+                        dispatchInit();
+                    }
+                }
+            }
+            t.addEventListener(TimerEvent.TIMER, timerFunc);
+            t.start();[/as]
+可能是由于执行主类的构造函数时，root的loaderInfo还是null，必须等待初始化完成后，才能获取到loaderInfo里面各种属性的值。

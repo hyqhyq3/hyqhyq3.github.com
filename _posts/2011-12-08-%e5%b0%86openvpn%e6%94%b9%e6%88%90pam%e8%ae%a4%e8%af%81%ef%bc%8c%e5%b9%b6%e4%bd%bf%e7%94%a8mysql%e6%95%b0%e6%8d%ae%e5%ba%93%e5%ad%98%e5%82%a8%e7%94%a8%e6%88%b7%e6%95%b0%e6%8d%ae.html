@@ -1,0 +1,5 @@
+---
+layout: post
+title: 将OpenVPN改成PAM认证，并使用mysql数据库存储用户数据
+---
+<p>修改/etc/openvpn/server.conf，加上以下几句</p>  <p>plugin /usr/lib/openvpn/openvpn-auth-pam.so openvpn    <br />client-cert-not-required     <br />username-as-common-name</p>  <p>然后创建/etc/pam.d/openvpn这个文件，内容如下</p>  <p>auth required pam_mysql.so&#160;&#160;&#160; user=vpn passwd=vpn host=localhost db=openvpn table=user usercolumn=username passwdcolumn=password crypt=2    <br />account required pam_mysql.so&#160;&#160; user=vpn passwd=vpn host=localhost db=openvpn&#160;&#160; table=user usercolumn=username passwdcolumn=password crypt=2</p>  <p>然后在mysql里面新建数据库openvpn，新建用户vpn,密码vpn，新建一个user表，包含username和password两个字段，添加一个用户 insert into user (username,password) values ('test',password('test'))</p>  <p>最后重启OpenVPN</p>  <p>service openvpn restart</p>

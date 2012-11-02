@@ -1,0 +1,26 @@
+---
+layout: post
+title: 在Mac下为Android编译ffmpeg 1.0
+---
+在windows下为android编译ffmpeg的时候，由于android的ndk使用的标准的windows路径，而编译过程只能在cygwin下进行，导致总是出错，提示
+<blockquote>arm-linux-androideabi-gcc is unable to create an executable file.</blockquote>
+没办法，只能转移到Mac平台。这时候Mac平台的优势就体现出来了，Unix的环境使它具有非常好的兼容性，基本上linux能用的，Mac都能用。
+<ol>
+	<li>下载并安装ndk（ndk的tar.bz2文件需要在命令行下解压，否则会出现问题。假设将ndk安装到$NDK）</li>
+	<li>接下来，下载ffmpeg的源码，我这里下载的是1.0版的，「<a title="下载ffmpeg" href="http://ffmpeg.org/download.html" target="_blank">下载地址</a>」</li>
+	<li>解压ffmpeg源码</li>
+	<li>进入ffmpeg源码目录</li>
+	<li>运行如下命令
+<pre class="lang:sh decode:true">export TMPDIR=/tmp
+PATH=$NDK/toolchains/arm-linux-androideabi-4.6/prebuilt/darwin-x86/bin:$PATH
+./configure --cross-prefix=arm-linux-androideabi- --target-os=linux --arch=arm --disable-ffmpeg --disable-ffserver --disable-ffprobe --disable-ffplay --disable-shared --enable-static --disable-doc --sysroot=$NDK/platforms/android-14/arch-arm --prefix=/tmp/ffmpeg
+make -j 3
+make install</pre>
+</li>
+	<li> 然后在/tmp/ffmpeg就能找到编译好的ffmpeg库文件了，用这个再去开发android的native应用。</li>
+</ol>
+PS：用这个库开发应用的时候，CPP文件包含头文件需要用如下形式
+<pre class="lang:c++ decode:true">extern "C" {
+#include &lt;libavcodec/avcodec.h&gt;
+};</pre>
+&nbsp;

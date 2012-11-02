@@ -1,0 +1,16 @@
+---
+layout: post
+title: js访问静态变量
+---
+<pre class="lang:default decode:true crayon-selected">function A(){
+}
+
+A.fun1 = function(){
+      console.log('this is fun1');
+}
+
+var a = new A;
+a.constructor.fun1();//call the static function</pre>
+&nbsp;
+
+&nbsp;

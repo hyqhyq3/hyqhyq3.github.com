@@ -1,0 +1,181 @@
+---
+layout: post
+title: 【译】ffmpeg教程（二）
+---
+<h1>教程二：输出到屏幕</h1>
+
+<a href="http://hyq.me/wp-content/uploads/2012/10/tutorial02.c">tutorial02.c</a>
+
+
+
+<h2>SDL和视频</h2>
+
+为了在屏幕上显示，我们需要使用SDL。SDL代表Simple DirectMedia Layer，是一个优秀的跨平台的多媒体库，被多个项目所使用。
+你可以在官网上获取这个库，如果有适合你操作系统的开发包，也可以去下载它。
+你在编译这个教程的代码时需要这个库（其他教程的也需要）。
+
+
+
+SDL有许多在屏幕上绘图的方法，并且有一种为显示电影而设计的特殊方式-YUV overlay。
+YUV（技术上来说并不是YUV，而是YCbCr） 注意：一些人在把“YCbCr”称作“YUV”时碰到许多困扰。
+一般来说，YUV是一种模拟格式，而YCbCr是一种数字格式。
+ffmpeg和SDL都在代码和宏里面使用YUV表示YCbCr。
+它是一种像RGB一样用于存储原始图像数据的方式。
+粗略的讲，Y就是亮度部分，U和V就是颜色部分。（这远比RGB复杂，因为丢弃了一些颜色信息，并且你每两个Y样本只有一个U样本和一个V样本。）
+SDL的YUV overlay 获取一个YUV原始数据的数组并显示它。
+它接收4中不同的YUV格式，但是YV12是最快的。
+另外还有一种YUV420P和YV12一样，除了U和V数组被交换了位置。
+420意思是按照4:2:0的比例进行子采样，基本上意味着每4个亮度样本有一个颜色样本，所以颜色信息只有四分之一。
+这是一种节省带宽的好方法，因为人类的眼睛感知不到这种变化。
+名称里面的“P”表示这种格式是平面的--简单的说Y，U，V部分都在分开的数组里面。
+ffmpeg可以将图像转换成YUV420P，更好的是许多视频流已经是这种格式了，或者很容易就转换成这种格式。
+所以我们现在的计划是将教程一里面的SaveFrame函数替换成显示到屏幕的函数。
+但是我们必须先看一下如何使用SDL库。首先我们必须包含这个库并且初始化SDL：
+
+
+
+<pre><code>#include &lt;SDL.h&gt;
+#include &lt;SDL_thread.h&gt;
+
+if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER)) {
+  fprintf(stderr, "Could not initialize SDL - %s\n", SDL_GetError());
+  exit(1);
+}
+</code></pre>
+
+SDL_Init()将我们需要使用的特性通知SDL库。SDL_GetError()显然是一个便利的调试函数。
+
+
+
+<!-- more -->
+
+<h2>创建一个Display</h2>
+
+现在我们在屏幕上需要一块放东西的地方。这种用于显示图像的基本区域在SDL里面被称作surface：
+
+
+
+<pre><code>SDL_Surface *screen;
+
+screen = SDL_SetVideoMode(pCodecCtx-&gt;width, pCodecCtx-&gt;height, 0, 0);
+if(!screen) {
+    fprintf(stderr, "SDL: could not set video mode - exiting\n");
+    exit(1);
+}
+</code></pre>
+
+这将用指定的宽高来设置屏幕.
+接下来的选项是屏幕的深度-0是一个代表“与当前一样”的特殊值。（这不能在OS X上工作，请看源码。）
+现在我们在屏幕上创建一个YUV overlay，我们才能在里面放入视频：
+
+
+
+<pre><code>SDL_Overlay     *bmp;
+
+bmp = SDL_CreateYUVOverlay(pCodecCtx-&gt;width, pCodecCtx-&gt;height,
+                           SDL_YV12_OVERLAY, screen);
+</code></pre>
+
+如同我们先前说的，我们使用YV12来显示图像。
+显示图像
+
+
+
+上面这些看起来都很简单！现在我们只需要显示图像了。
+让我们一路走下去，来到我们获取到一个完整frame的地方。
+我们可以丢掉先前所有关于RGB frame的东西，用我们的代码替换SaveFrame()。为了显示图像，我们将创建一个AVPicture结构体，并且将其data指针和linesize指向我们的YUV overlay：
+
+
+
+<pre><code>if(frameFinished) {
+    SDL_LockYUVOverlay(bmp);
+
+    AVPicture pict;
+    pict.data[0]     = bmp-&gt;pixels[0];
+    pict.data[1]     = bmp-&gt;pixels[2];
+    pict.data[2]     = bmp-&gt;pixels[1];
+
+    pict.linesize[0] = bmp-&gt;pitches[0];
+    pict.linesize[1] = bmp-&gt;pitches[2];
+    pict.linesize[2] = bmp-&gt;pitches[1];
+
+    // Convert the image into YUV format that SDL uses
+    img_convert(&amp;pict, PIX_FMT_YUV420P,
+    (AVPicture *)pFrame, pCodecCtx-&gt;pix_fmt, 
+    pCodecCtx-&gt;width, pCodecCtx-&gt;height);
+
+    SDL_UnlockYUVOverlay(bmp);
+}  
+</code></pre>
+
+首先，因为我们要向overlay里面写东西，所以我们锁定了overlay。
+这是一个好习惯，以后我们将少了很多问题。
+AVPicture结构体如先前展示的，有一个包含4个指针的数组data。
+然而我们这里用来处理YUV420P，我们只需要3个通道，因此只有3套数据。
+另外的格式可能有第四个透明通道或者其他的指针。
+linesize如同它听起来的一样，在YUVoverlay中，类似的结构是pixels和pitches。（“pitches”是SDL指定为一行数据指定宽度的项）
+我们要做的是将pict.data的三个数组指向YUV overlay，当然，YUV overlay已经分配好了空间。
+我们将转换的格式改成PIX_FMT_YUV420P，接着我们像先前一样使用img_convert。
+绘制图像
+
+
+
+但是我们还需要告诉SDL显示出我们给它的数据，我们传递一个巨型到这个函数，告诉它在哪放电影，和电影将被拉伸到的宽高。这样SDL为我们拉伸并且使用你的图形处理器来加速。
+
+
+
+<pre><code>SDL_Rect rect;
+
+if(frameFinished) {
+    /* ... code ... */
+    // Convert the image into YUV format that SDL uses
+    img_convert(&amp;pict, PIX_FMT_YUV420P,
+    (AVPicture *)pFrame, pCodecCtx-&gt;pix_fmt, 
+    pCodecCtx-&gt;width, pCodecCtx-&gt;height);
+
+    SDL_UnlockYUVOverlay(bmp);
+    rect.x = 0;
+    rect.y = 0;
+    rect.w = pCodecCtx-&gt;width;
+    rect.h = pCodecCtx-&gt;height;
+    SDL_DisplayYUVOverlay(bmp, &amp;rect);
+}
+</code></pre>
+
+现在我们的视频被显示出来了！
+让我们利用这个时间来告诉你SDL的另一个特性：它的事件系统。
+SDL被设定为当你输入、移动鼠标、发送一个信号时，它将产生一个event。
+如果你想处理这些用户输入，那么你的程序可以检查这些时间。
+你的程序同时可以创建事件并发送给SDL事件系统。
+我们可以在教程四中看到，这在利用SDL多线程编程时特别有用。
+在我们的程序中，处理完一个packet后，开始事件轮询。
+现在我们就爱那个处理SDL_QUIT事件，用于退出：
+
+
+
+<pre><code>SDL_Event event;
+av_free_packet(&amp;packet);
+SDL_PollEvent(&amp;event);
+switch(event.type) {
+    case SDL_QUIT:
+      SDL_Quit();
+      exit(0);
+      break;
+    default:
+      break;
+}
+</code></pre>
+
+接着，我们开始运行吧，抛开那些老的令人讨厌的东西，准备编译。如果你是在用Linux或者一个变种，那么最好的使用SDL库编译的方式是：
+
+
+
+<pre><code>gcc -o tutorial02 tutorial02.c -lavutil -lavformat -lavcodec -lz -lm `sdl-config --cflags --libs`
+</code></pre>
+
+sdl-config打印一些用于包含SDL库的gcc参数。
+在你的系统上，你可能需要做一些其他的事情，请检查你系统的SDL文档。
+编译完成后，继续运行它。
+运行后发生了生？这个视频开始乱了！实际上我们只是以尽可能快的速度从电影文件读取并显示出所有的视频帧。我们还没有任何代码用与控制何时需要显示视频。但是更严重的是我们忘了一个重要的东西：声音！
+
+

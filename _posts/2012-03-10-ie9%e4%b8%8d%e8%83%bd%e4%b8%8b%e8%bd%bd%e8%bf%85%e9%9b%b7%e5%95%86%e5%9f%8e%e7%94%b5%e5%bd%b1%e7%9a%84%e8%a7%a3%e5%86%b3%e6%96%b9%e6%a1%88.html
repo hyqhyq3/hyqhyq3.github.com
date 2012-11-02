@@ -1,0 +1,5 @@
+---
+layout: post
+title: IE9不能下载迅雷商城电影的解决方案
+---
+<p>今天无聊，去迅雷商城看了看，随便选了几个电影，结果发现不能下载。点击下载按钮，提示浏览器不兼容！于是开启开发者工具，发现了一个检测浏览器兼容性的函数isCompatibleBrowser，这里用navigator.userAgent.indexOf(&quot;MSIE&quot;)!=-1检查是否为IE浏览器。然后我查看了一下navigator.userAgent的值，只发现了“Mozilla/4.0 (compatible; msie 9.0; QDesk 2.3.1192.202; Windows NT 6.1; WOW64; Trident/5.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; Media Center PC 6.0; InfoPath.3; .NET4.0C; .NET4.0E)”，这里的msie变成小写了，难怪检测通不过。</p>  <p>解决方法：</p>  <p>先进入下载页面，在地址栏输入javascript:void(isCompatibleBrowse=function(){return true})回车，然后就可以正常下载了</p>

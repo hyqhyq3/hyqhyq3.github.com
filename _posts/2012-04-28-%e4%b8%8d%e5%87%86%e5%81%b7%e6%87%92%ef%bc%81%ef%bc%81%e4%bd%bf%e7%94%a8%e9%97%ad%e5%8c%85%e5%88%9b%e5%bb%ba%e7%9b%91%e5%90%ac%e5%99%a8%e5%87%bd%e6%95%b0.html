@@ -1,0 +1,27 @@
+---
+layout: post
+title: 不准偷懒！！使用闭包创建监听器函数
+---
+有如下一段代码
+<pre class="lang:as decode:true">for(var i:int = 1; i &lt; 10; ++i) {
+	var button:Button = new Button;
+	button.label = String("Button" + i);
+	button.addEventListener(MouseEvent.CLICK, function():void {
+		Alert.show(i);
+	});
+	group.addElement(button);
+}</pre>
+用过的人都知道这段代码不能达到预期的效果，它生成了10个按钮，但是无论点击哪个按钮，弹出窗口都显示10，这真是一个奇怪的问题。
+
+为了不让它偷工减料，于是使用了一种奇怪的方法（奇怪的问题要用奇怪的方法解决）
+<pre class="lang:default decode:true ">for(var i:int = 1; i &lt; 10; ++i) {
+	var button:Button = new Button;
+	button.label = String("Button" + i);
+	button.addEventListener(MouseEvent.CLICK, (function(local_i:int) {
+		return function():void {
+			Alert.show(local_i);
+		}
+	})(i));
+	group.addElement(button);
+}</pre>
+&nbsp;

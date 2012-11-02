@@ -1,0 +1,40 @@
+---
+layout: post
+title: 使用百度文库阅读器查看文档
+---
+百度文库支持word，ppt，pdf等格式的文档，它是通过后台转换成pdf，再用swftools转换成swf，最后通过flash的阅读器来阅读。
+
+这篇文章主要是记录了这个阅读器的一些使用方法。
+<ol>
+	<li>首先是需要将word，ppt等非pdf格式文档转换成pdf，这里可以用open office自动转换，也可以手动转换</li>
+	<li>然后需要将pdf转换成swf，这里转换的时候是有讲究的，百度文库将pdf转换成多个单页的swf，可以通过如下命令转换
+<pre class="lang:sh decode:true">pdf2swf -G -t -T 9 -s storeallcharacters swf_file_format_spec_v10.pdf  -o swf/%.swf</pre>
+<ul>
+	<li>-G 参数使swf更快地渲染</li>
+	<li>-T 9 参数设定输出的swf文件版本号，增强稳定性</li>
+	<li>-s storeallcharacters 保存文档中所有的文字信息，便于搜索</li>
+	<li>-t 在每帧加入一个停止代码，增强稳定性</li>
+</ul>
+</li>
+	<li>阅读器需要三个参数，doctype文档类型，docid文档id，docurl文档的路径，在请求服务器的时候，会访问$docurl + "/" + $docid + "?pn=$pn&amp;rn=$rn"。pn是页码，rn是页数。阅读器会一次读取多页，从第pn页到pn+rn-1页。</li>
+	<li>百度文库阅读器不是直接用http传输文件，而是在先输出106字节的元数据，然后是多个swf文件的原始内容，在php中用如下代码实现
+<pre class="lang:php decode:true ">$book = substr($_SERVER['PATH_INFO'],1);
+$path = dirname(__FILE__) . "/docs/$book"; //文档的保存路径
+$total = get_file_num($path); //获取文档总页数
+$pn = (int)$_GET['pn'];
+$rn = (int)$_GET['rn'];
+$to = $pn + $rn - 1;
+$obj = array(
+	'totalPage'=&gt;$total,
+	'fromPage'=&gt;$pn,
+	'toPage'=&gt;$to
+);
+$header = str_pad(json_encode($obj), 106);
+header('Content-Type: application/x-shockwave-flash');
+echo $header;
+for($i=$pn; $i &lt;= $to; $i++) {
+
+	echo file_get_contents("$path/$i.swf");
+}</pre>
+附件：<a href="http://hyq.me/wp-content/uploads/2012/10/reader_new_a1.swf">百度文库查看器</a></li>
+</ol>

@@ -1,0 +1,5 @@
+---
+layout: post
+title: iptables一个好玩的功能
+---
+<p>iptables竟然带了关键词过滤功能……</p>  <p>iptables -I INPUT -m string --string &quot;敏感词汇&quot; --algo kmp -j DROP</p>  <p>然后包含敏感词汇的数据包都会被丢弃</p>

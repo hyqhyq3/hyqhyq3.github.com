@@ -1,0 +1,5 @@
+---
+layout: post
+title: 让已退休的Linux焕发生机
+---
+<p>今天在服务器上使用apt-get安装个东西，结果提示404，用apt-get update，还是404！！我到163的镜像上一看，lenny的发行版没了，再去官网看看，也没了……</p> <p>没有办法，不能重装系统，只能想其他办法，打开/etc/apt/source.list，将其中的lenny全部替换成stable，然后保存退出，再次apt-get update，这次竟然可以了。接着安装软件，都没有问题。</p>

@@ -1,0 +1,5 @@
+---
+layout: post
+title: 使用OSMF框架播放RTMP直播视频
+---
+<p>今天整了一天的OSMF，播放直播视频时始终有问题，经过查看SMP源码和OSMF文档，最后终于找到了解决办法，特记录在这里，希望能帮到遇到了同样问题的人。</p>  <p>RTMP视频流在创建MediaResource的时候，需要使用StreamingURLResource，然后需要将streamType属性设置成StreamType.LIVE或者StreamType.LIVE_OR_RECORD。另外，如果使用的fms的instance（在appname后面还有instanceName，如rtmp://localhost/vod/instance1/livestream）那么还需要将urlIncludesFMSApplicationInstance设置成true，然后再创建MediaElement，就可以正常播放了</p>

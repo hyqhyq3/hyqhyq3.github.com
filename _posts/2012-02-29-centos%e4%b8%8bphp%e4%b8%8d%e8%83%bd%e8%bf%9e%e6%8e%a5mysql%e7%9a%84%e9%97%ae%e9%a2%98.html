@@ -1,0 +1,5 @@
+---
+layout: post
+title: CentOS下PHP不能连接MySQL的问题
+---
+<p>今天需要在A服务器上访问B服务器的MySQL，于是在B服务器上添加了一个可以远程登录的账户，然后在配置文件里面加上bind-address=0.0.0.0，重启服务后，发现A服务器怎么也访问不到B服务器的MySQL。</p>  <p>于是尝试用命令行的mysql工具，结果竟然连接上了。真是一个奇怪的现象。于是觉得是PHP的问题，但是想到PHP并没有这方面的相关设置，现在是不能访问到B服务器，不是提示函数不存在。</p>  <p>然后将提示信息Can’t connect to MySQL on ‘10.0.55.16’(13)到网上搜索，结果发现出现这个问题的不只是我一人。很多人都在CentOS或者redhat上面碰到了这个问题。是由于Selinux的设置引起的问题，解决方案有几种，其中最简单的莫过于直接关闭整个系统的Selinux，然后还有临时关闭Selinux的方法。</p>  <p>1.永久关闭selinux：修改/etc/sysconfig/selinux，将SELINUX=enforcing改成disabled</p>  <p>2.暂时关闭selinux：#setenforce 0</p>

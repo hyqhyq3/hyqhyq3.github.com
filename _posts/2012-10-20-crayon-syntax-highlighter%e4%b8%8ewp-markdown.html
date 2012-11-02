@@ -1,0 +1,9 @@
+---
+layout: post
+title: Crayon Syntax Highlighter与WP-Markdown
+wordpress_id: 231
+
+---
+在使用WP-Markdown后，如果代码中包含有<strong><em>&lt;</em></strong>、<strong><em>></em></strong>等字符，在最后显示代码时，会变成HTML实体<strong><em>&amp;lt;</em></strong> <strong><em>&amp;lt;</em></strong>。这并不是我想要的效果，经过几天的郁闷，最后在Crayon Syntax Highlighter的设置里面找到一项：<strong><em>代码=> 在代码中进行HTML解码</em></strong>，勾上它后，C语言的include后的尖括号变显示正常了
+
+

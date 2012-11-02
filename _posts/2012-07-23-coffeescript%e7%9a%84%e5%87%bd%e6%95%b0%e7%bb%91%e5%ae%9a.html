@@ -1,0 +1,14 @@
+---
+layout: post
+title: CoffeeScript的函数绑定
+---
+在Javascript中，this关键字被动态地附加到当前的函数对象。如果你传递一个函数作为回调或者将它附加到到另一个对象，那么就会丢失this的原有值。如果你不熟悉这种行为，那么<a href="http://www.digital-web.com/articles/scope_in_javascript/">Digital Web Article</a>给出了一个关于这种行为的很好的概述。
+
+胖箭头=&gt;可以被用做定义函数并且将这个函数内的this绑定到当前值。这对于使用Prototype和jQuery这种基于回调的库创建一个迭代器函数传递给each，或者事件处理函数传递给bind。用胖箭头创建的函数可以使用this来访问它们在定义处的属性。
+<pre class="lang:coffee decode:true">Account = (customer, cart) -&gt;
+  @customer = customer
+  @cart = cart
+
+  $('.shopping_cart').bind 'click', (event) =&gt;
+    @customer.purchase @cart</pre>
+&nbsp;

@@ -1,0 +1,27 @@
+---
+layout: post
+title: 使用FMS录制视频，并保存额外信息
+---
+在项目中需要录制视频，并且还需要记录打开文档，标记等动作。通过分析已有项目的代码，发现NetStream.send这个方法可以实现想要的功能。
+这个方法是将动作信息直接插入到媒体流里面，保证回放时的时间与录制时同步。
+发布端代码：
+<pre class="lang:as decode:true" title="发布端代码">private function drawLine(fromX:int, fromY:int, toX:int, toY:int):void
+{
+    doDrawLine(fromX, fromY, toX, toY);
+    ns.send('onDataEvent', 'drawLine', fromX, fromY, toX, toY);
+}</pre>
+接受端，回放端代码：
+<pre class="lang:as decode:true " title="接收端代码">//将ns的client属性设置成this
+public function onDataEvent(action:String, ...args):void
+{
+    switch(action) {
+        case 'drawLine':
+            doDrawLine(args[0], args[1], args[2], args[3]);
+            break;
+        default:
+            trace('unknow action', action);
+    }
+}</pre>
+&nbsp;
+
+&nbsp;

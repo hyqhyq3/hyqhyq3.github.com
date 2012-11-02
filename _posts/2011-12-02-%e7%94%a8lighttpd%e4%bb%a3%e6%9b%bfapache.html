@@ -1,0 +1,103 @@
+---
+layout: post
+title: 用lighttpd代替apache
+---
+<p>用apache真TM耗资源，至少对于我来说，512M内存完全不够用，于是换到了lighttpd，也没啥难度的，就是碰到了几个问题：</p>  <p>1.虚拟主机配置，在lighttpd.conf里面加入以下内容</p>  <div class="csharpcode">   <pre class="csharpcode">$HTTP[<span class="str">&quot;host&quot;</span>] == <span class="str">&quot;blog.programcareer.net&quot;</span> {
+        server.name = <span class="str">&quot;blog.programcareer.net&quot;</span>
+        server.document-root = <span class="str">&quot;/var/www/blog.programcareer.net&quot;</span>
+        server.errorlog = <span class="str">&quot;/var/log/lighttpd/wp-error.log&quot;</span>
+        accesslog.filename = <span class="str">&quot;/var/log/lighttpd/wp-access.log&quot;</span>
+}</pre>
+  <style type="text/css">
+.csharpcode, .csharpcode pre
+{
+	font-size: small;
+	color: black;
+	font-family: consolas, "Courier New", courier, monospace;
+	background-color: #ffffff;
+	/*white-space: pre;*/
+}
+.csharpcode pre { margin: 0em; }
+.csharpcode .rem { color: #008000; }
+.csharpcode .kwrd { color: #0000ff; }
+.csharpcode .str { color: #006080; }
+.csharpcode .op { color: #0000c0; }
+.csharpcode .preproc { color: #cc6633; }
+.csharpcode .asp { background-color: #ffff00; }
+.csharpcode .html { color: #800000; }
+.csharpcode .attr { color: #ff0000; }
+.csharpcode .alt 
+{
+	background-color: #f4f4f4;
+	width: 100%;
+	margin: 0em;
+}
+.csharpcode .lnum { color: #606060; }</style></div>
+<style type="text/css">
+.csharpcode, .csharpcode pre
+{
+	font-size: small;
+	color: black;
+	font-family: consolas, "Courier New", courier, monospace;
+	background-color: #ffffff;
+	/*white-space: pre;*/
+}
+.csharpcode pre { margin: 0em; }
+.csharpcode .rem { color: #008000; }
+.csharpcode .kwrd { color: #0000ff; }
+.csharpcode .str { color: #006080; }
+.csharpcode .op { color: #0000c0; }
+.csharpcode .preproc { color: #cc6633; }
+.csharpcode .asp { background-color: #ffff00; }
+.csharpcode .html { color: #800000; }
+.csharpcode .attr { color: #ff0000; }
+.csharpcode .alt 
+{
+	background-color: #f4f4f4;
+	width: 100%;
+	margin: 0em;
+}
+.csharpcode .lnum { color: #606060; }</style>
+
+<p>&#160;</p>
+
+<p>2.固定url重写问题，在lighttpd.conf加入以下内容</p>
+
+<pre class="csharpcode">url.rewrite-once = ( 
+<span class="str">    &quot;^/(wp-.+).*/?&quot;</span> =&gt; <span class="str">&quot;$0&quot;</span>, 
+<span class="str">    &quot;^/(sitemap.xml)&quot;</span> =&gt; <span class="str">&quot;$0&quot;</span>, 
+<span class="str">    &quot;^/(xmlrpc.php)&quot;</span> =&gt; <span class="str">&quot;$0&quot;</span>, 
+<span class="str">    &quot;^/keyword/([A-Za-z_0-9-]+)/?$&quot;</span> =&gt; <span class="str">&quot;/index.php?keyword=$1&quot;</span>, 
+<span class="str">    &quot;^/.*?(?.*)?$&quot;</span> =&gt; <span class="str">&quot;/index.php$1&quot;</span> 
+)</pre>
+<style type="text/css">
+.csharpcode, .csharpcode pre
+{
+	font-size: small;
+	color: black;
+	font-family: consolas, "Courier New", courier, monospace;
+	background-color: #ffffff;
+	/*white-space: pre;*/
+}
+.csharpcode pre { margin: 0em; }
+.csharpcode .rem { color: #008000; }
+.csharpcode .kwrd { color: #0000ff; }
+.csharpcode .str { color: #006080; }
+.csharpcode .op { color: #0000c0; }
+.csharpcode .preproc { color: #cc6633; }
+.csharpcode .asp { background-color: #ffff00; }
+.csharpcode .html { color: #800000; }
+.csharpcode .attr { color: #ff0000; }
+.csharpcode .alt 
+{
+	background-color: #f4f4f4;
+	width: 100%;
+	margin: 0em;
+}
+.csharpcode .lnum { color: #606060; }</style>
+
+<p></p>
+
+<p>&#160;</p>
+
+<p>3.安装php5-cgi</p>

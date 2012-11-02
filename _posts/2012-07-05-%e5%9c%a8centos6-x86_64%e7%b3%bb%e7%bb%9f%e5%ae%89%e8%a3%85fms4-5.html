@@ -1,0 +1,17 @@
+---
+layout: post
+title: 在CentOS6 x86_64系统安装FMS4.5
+---
+在CentOS6或者RedHat6上安装FMS4.5可能会遇到以下问题
+<ol>
+	<li>file: command not found</li>
+ 
+<pre class="lang:sh decode:true " >yum install file</pre> 
+
+	<li>提示libcap未安装 vi installFMS，在这个文件里面找到/lib/libcap.so，将其改成/lib64/libcap.so</li>
+	<li>安装成功后，不能正常启动服务，使用netstat查看端口，发现没有监听1935 </li>
+ 
+<pre class="lang:sh decode:true " >cd /lib64
+ln -s libcap.so.1 libcap.so.2 </pre> 
+
+</ol>

@@ -1,0 +1,33 @@
+---
+layout: post
+title: 使用ActionScript绘制曲线
+---
+<p>虽然一直知道ActionScript里面有graphics.curveTo这个方法，但是一直没有用过，因为控制点什么的都不知道该取什么值。直到今天项目中需要用到，才研究了一下，参考了网上现成的代码，得出了以下的一个工具类</p><pre>package
+{
+	import flash.display.Sprite;
+	import flash.geom.Point;
+	
+	public class CurveUtil
+	{
+		private var _sprite:Sprite;
+		private var a1:Point;
+		private var c1:Point;
+		
+		public function CurveUtil(sprite:Sprite)
+		{
+			_sprite = sprite;
+			a1 = new Point(0,0);
+			c1 = new Point(0,0);
+			new Hello;
+		}
+		
+		public function curvePlus(c2:Point):void
+		{
+			_sprite.graphics.moveTo(a1.x, a1.y);                 
+			a1 = Point.interpolate(c1, c2, 0.5);
+			_sprite.graphics.curveTo(c1.x, c1.y, a1.x, a1.y);      
+			c1=c2;
+		}
+	}
+}
+</pre>

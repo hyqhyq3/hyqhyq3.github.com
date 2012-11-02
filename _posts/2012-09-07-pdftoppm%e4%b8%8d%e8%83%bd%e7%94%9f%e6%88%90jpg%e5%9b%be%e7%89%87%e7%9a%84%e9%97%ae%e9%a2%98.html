@@ -1,0 +1,7 @@
+---
+layout: post
+title: pdftoppm不能生成jpg图片的问题
+---
+pdftoppm是包含在xpdf里面的一个小工具，用于把pdf转换成图片，但是突然某一天发现pdftoppm不支持-jpeg参数了。去找了一个支持-jpeg的pdftoppm，发现其版本号为0.16.7，而这个不支持-jpeg的版本号为3.02，真是奇怪了。在网上搜索了半天，没有找到解决办法。突然之间发现用户目录下面既有xpdf的源码，又有poppler的源码，而poppler的版本号正好是0.16.x，于是编译poppler并安装，果然有了生成jpg功能。
+
+PS：poppler需要安装poppler-data才支持中文

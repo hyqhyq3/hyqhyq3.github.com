@@ -1,0 +1,432 @@
+---
+layout: post
+title: 【译】ffmpeg教程（一）
+---
+
+原文地址<a href="http://dranger.com/ffmpeg/tutorial01.html">http://dranger.com/ffmpeg/tutorial01.html</a>
+
+
+
+<h2>教程一：制作视频截图</h2>
+
+<h3>概要</h3>
+
+视频文件有几个基本的部分。
+
+
+
+首先是被称为容器的文件本身，和文件里确定容器类型的信息。
+
+
+
+比如AVI和Qucktime都是容器。
+
+
+
+其次是有几个流。（一个流指随着时间连续的数据元素。）
+
+
+
+这些流里面的数据元素被称为frame（帧）。
+
+
+
+每个流被分别用不同类型的codec编码。
+
+
+
+codec定义了实际的数据是如何被编码（COded）和解码（DECoded）-因此被称为CODEC。
+
+
+
+比如DivX和MP3都是codec。
+
+
+
+接着从流里面读取出来packet。
+
+
+
+Packet是包含可以被解码为原始frame的数据的数据块，这些原始的frame最终被我们的程序所处理。
+
+
+
+为了达到我们的目的，每个packet包含一个完整的frame或者包含多个音频的frame。
+
+
+
+用一种最简单的形式表示，处理音频和视频非常简单
+
+
+
+<pre><code>10 从video.avi打开video_stream
+20 从video_stream中读取packet到frame中
+30 如果frame不完整，跳转到 20
+40 利用frame做一些事情
+50 跳回 20
+</code></pre>
+
+使用ffmpeg处理音视频就像这个程序这么优雅和简单，即使一些程序可能有非常复杂的利用frame做的"事情“。
+
+
+
+所以在这篇教程中，我们将打开一个文件，读取视频流，然后我们就将frame写入到ppm文件中。
+<!--more-->
+
+
+
+<h3>打开文件</h3>
+
+首先，让我们看看最开始如何打开一个文件。
+
+
+
+利用ffmpeg，你必须首先初始化这个库。（在你的系统中，可能需要使用&lt;ffmpeg/avcodec.h>和&lt;ffmpeg/avformat.h>）（也有可能是&lt;libavcodec/avcodec.h>和&lt;libavformat/avformat.h>）
+
+
+
+<pre><code>#include &lt;avcodec.h&gt;
+#include &lt;avformat.h&gt;
+...
+int main(int argc, charg *argv[]) {
+av_register_all();
+</code></pre>
+
+这将注册库里面所有可用的format和codec，在打开文件时将会自动使用对应的format和codec。
+
+
+
+请注意，你只需要调用av&#95;register&#95;all()一次，所以我们在main函数中调用它。
+
+
+
+如果你喜欢，你可以注册某些单独的format和codec。
+
+
+
+但是通常情况下，你不必这么做。
+
+
+
+现在我们可以实际打开这个文件：
+
+
+
+<pre><code>AVFormatContext *pFormatCtx;
+
+// 打开视频文件
+if(av_open_input_file(&amp;pFormatCtx, argv[1], NULL, 0, NULL)!=0)
+  return -1; // Couldn't open file
+</code></pre>
+
+这个函数将合适的信息写到pFormatCtx->streams中。
+
+
+
+我们介绍一个便利的调试函数显示里面包含的内容：
+
+
+
+<pre><code>// 输出文件的有关信息到标准错误输出
+dump_format(pFormatCtx, 0, argv[1], 0);
+</code></pre>
+
+现在pFormatCtx->streams是一个指针的数组，数组长度是pFormatCtx->nb_streams，接下来让我们遍历它并寻找到一个视频流。
+
+
+
+<pre><code>int i;
+AVCodecContext *pCodecCtx;
+
+// 找到第一个视频流
+videoStream=-1;
+for(i=0; i&lt;pFormatCtx-&gt;nb_streams; i++)
+  if(pFormatCtx-&gt;streams[i]-&gt;codec-&gt;codec_type==CODEC_TYPE_VIDEO) {
+    videoStream=i;
+    break;
+  }
+if(videoStream==-1)
+  return -1; // Didn't find a video stream
+
+// 获得一个指针，指向视频流codec context
+pCodecCtx=pFormatCtx-&gt;streams[videoStream]-&gt;codec;
+</code></pre>
+
+流的codec信息包含在codec context中。
+
+
+
+context codec包含了流用到的codec的所有信息。
+
+
+
+我们有了指向它的指针，但是我们还需要一个实际的codec，并打开它。
+
+
+
+<pre><code>AVCodec *pCodec;
+
+// 找到视频流的解码器
+pCodec=avcodec_find_decoder(pCodecCtx-&gt;codec_id);
+if(pCodec==NULL) {
+  fprintf(stderr, "Unsupported codec!\n");
+  return -1; // 找不到解码器
+}
+// 打开解码器
+if(avcodec_open(pCodecCtx, pCodec)&lt;0)
+  return -1; // 不能打开解码器
+</code></pre>
+
+你们中可能还有人记得在老的教程中，这段代码还有两个部分：添加CODEC&#95;FLAG&#95;TRUNCATED 到 pCodecCtx->flags和添加用于修正明显错误的帧率的hack。
+
+
+
+这两个补丁已经不在ffplay.c中了，我不得不假定不再需要它们。
+
+
+
+还有另外一点不同需要指出的是，我们删掉了那些代码后，pCodecCtx->time_base现在包含了帧率信息。
+
+
+
+time_base是一个拥有分子(numerator)和分母(denominator)的结构体(AVRational)。
+
+
+
+我们用分数代表帧率，因为很多编码的帧率都不是整数。（比如NTSC的29.97fps）
+
+
+
+<h3>存储数据</h3>
+
+现在我们开始实际地存储这个frame
+
+
+
+<pre><code>AVFrame *pFrame;
+
+// 分配视频frame内存
+pFrame=avcodec_alloc_frame();
+</code></pre>
+
+由于我们想输出存储为24位RGB的PPM文件，我们需要将我们的frame从原生的格式转换成RGB。
+
+
+
+ffmpeg将为我们做这个转换。
+
+
+
+对于大多数项目（包括我们的项目）我们希望转换我们的原始frame到一个特定的格式。
+
+
+
+我们先分配转换后frame的内存。
+
+
+
+<pre><code>// 为AVFrame structure分配内存
+pFrameRGB=avcodec_alloc_frame();
+if(pFrameRGB==NULL)
+  return -1;
+</code></pre>
+
+虽然我们已经为这个frame分配了内存，但是我们还是需要一个空间来存放转换后的原始数据。
+
+
+
+我们使用avpicture&#95;get&#95;size计算我们需要的空间大小，并手动分配空间：
+
+
+
+<pre><code>uint8_t *buffer;
+int numBytes;
+// 决定所需的缓冲区大小，并分配内存
+numBytes=avpicture_get_size(PIX_FMT_RGB24, pCodecCtx-&gt;width,
+                            pCodecCtx-&gt;height);
+buffer=(uint8_t *)av_malloc(numBytes*sizeof(uint8_t));
+</code></pre>
+
+av_malloc是ffmpeg对malloc进行的包装，它可以保证内存地址对齐。
+
+
+
+但是它不会防止内存泄露，两次释放或者其他的内存问题。
+
+
+
+现在我们使用 avpicture_fill 将缓冲区关联到pFrameRGB。
+
+
+
+关于AVPicture转换：AVPicture是AVFrame的一个子集，AVFrame结构体的开头与AVPicture结构体完全相同。
+
+
+
+<pre><code>// 将缓冲区适当的部分赋值给pFrameRGB的planes
+// 注意pFrameRGB是一个AVFrame，但是AVFrame是
+// AVPicture的一个超集
+avpicture_fill((AVPicture *)pFrameRGB, buffer, PIX_FMT_RGB24,
+                pCodecCtx-&gt;width, pCodecCtx-&gt;height);
+</code></pre>
+
+最后，我们开始从流中读取。
+
+
+
+<h3>读取数据</h3>
+
+接下来我们要做的是从整个视频流中读取packet，解码成frame，当读取到完成的frame后，转换并保存它。
+
+
+
+<pre><code>int frameFinished;
+AVPacket packet;
+
+i=0;
+while(av_read_frame(pFormatCtx, &amp;packet)&gt;=0) {
+  // 判断是否为视频流packet?
+  if(packet.stream_index==videoStream) {
+    // 解码视频packet
+    avcodec_decode_video(pCodecCtx, pFrame, &amp;frameFinished,
+                         packet.data, packet.size);
+
+    // 判断是否有完整的frame
+    if(frameFinished) {
+    // 将图片从原始格式转换成RGB
+        img_convert((AVPicture *)pFrameRGB, PIX_FMT_RGB24, 
+            (AVPicture*)pFrame, pCodecCtx-&gt;pix_fmt, 
+            pCodecCtx-&gt;width, pCodecCtx-&gt;height);
+
+        // 保存到文件
+        if(++i&lt;=5)
+          SaveFrame(pFrameRGB, pCodecCtx-&gt;width, 
+                    pCodecCtx-&gt;height, i);
+    }
+  }
+
+  // 释放由av_read_frame分配的内存。
+  av_free_packet(&amp;packet);
+}
+</code></pre>
+
+这个过程同样很简单：av&#95;read&#95;frame()读取到一个packet，并存储到AVPacket结构体中。
+
+
+
+注意我们只是分配了这个结构体的内存，ffmpeg为我们分配了packet.data的内存。
+
+
+
+这将在后面的av&#95;free&#95;packet()释放。
+
+
+
+avcodec&#95;decode&#95;video()将转换packet转换为frame。
+
+
+
+然而我们解码一个packet后可能没有一个完整的frame，于是avcodec&#95;decode&#95;video()在有下一个完整frame时为我们设置了frameFinished。
+
+
+
+最后，我们使用ima&#95;convert()将图像的从原始格式（pCodecCtx->pix&#95;fmt）转换到RGB。
+
+
+
+记住，你可以将AVFrame指针转换到AVPicture。
+
+
+
+最后我们将frame和宽高信息传递给SaveFrame函数。
+
+
+
+现在我们需要做的是写出SaveFrame函数，用于把RGB数据写入到PPM格式的文件中。
+
+
+
+我们将粗略的使用一种PPM格式，相信我们，这它能正常工作。
+
+
+
+<pre><code>void SaveFrame(AVFrame *pFrame, int width, int height, int iFrame) {
+  FILE *pFile;
+  char szFilename[32];
+  int  y;
+
+  // 打开文件
+  sprintf(szFilename, "frame%d.ppm", iFrame);
+  pFile=fopen(szFilename, "wb");
+  if(pFile==NULL)
+    return;
+
+  // 写入头信息
+  fprintf(pFile, "P6\n%d %d\n255\n", width, height);
+
+  // 写入像素信息
+  for(y=0; y&lt;height; y++)
+    fwrite(pFrame-&gt;data[0]+y*pFrame-&gt;linesize[0], 1, width*3, pFile);
+
+  // 关闭文件
+  fclose(pFile);
+}
+</code></pre>
+
+我们做了一点标准文件打开等操作。然后写入RGB数据，我们一次写入一行。
+
+
+
+一个PPM就是一个包含了RGB信息的长字符串的简单文件。
+
+
+
+如果你知道HTML颜色，那么每个像素点都是#ff0000#ff0000排布的话，那就是一个红色屏幕。（它是以二进制存储，并且没有分隔符，你应该能懂的）
+
+
+
+头信息决定了图片的宽高和RGB的最大值。
+
+
+
+现在，返回到main()函数中，当我们读取完视频stream后，我们需要清理它们：
+
+
+
+<pre><code>// 释放RGB图像
+av_free(buffer);
+av_free(pFrameRGB);
+
+// 释放YUV frame
+av_free(pFrame);
+
+// 关闭codec
+avcodec_close(pCodecCtx);
+
+// 关闭视频文件
+av_close_input_file(pFormatCtx);
+
+return 0;
+</code></pre>
+
+你应该注意到了我们使用av&#95;free释放由avcodec&#95;alloc&#95;frame和av&#95;malloc分配的内存。
+
+
+
+这就是全部的代码，如果你在linux或者类似平台下，你需要运行
+
+
+
+<pre><code>gcc -o tutorial01 tutorial01.c -lavutil -lavformat -lavcodec -lz -lavutil -lm
+</code></pre>
+
+如果你使用的是一个老版本的ffmpeg，那么去掉-lavutil
+
+
+
+<pre><code>gcc -o tutorial01 tutorial01.c -lavformat -lavcodec -lz -lm
+</code></pre>
+
+许多图像处理程序应该都能打开ppm文件，在电影文件上测试下我们的程序吧。
+
+

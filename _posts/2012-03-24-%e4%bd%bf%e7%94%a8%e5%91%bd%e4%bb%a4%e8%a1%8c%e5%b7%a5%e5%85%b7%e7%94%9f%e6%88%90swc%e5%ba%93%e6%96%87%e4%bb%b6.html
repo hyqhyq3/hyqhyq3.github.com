@@ -1,0 +1,5 @@
+---
+layout: post
+title: 使用命令行工具生成swc库文件
+---
+<p>在Flash Builder中不能讲AS3项目编译成swc，但是可以用命令行工具compc来编译。</p> <p><code>compc -source-path+=libs Class1 Class2 -o mylib.swc </code></p> <p><code>这条命令可以Class1和Class2编译到mylib.swc中，并且自动将引用到的代码也合并进来，source-path指定了类文件的寻找路径</codev></p>

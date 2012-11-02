@@ -1,0 +1,5 @@
+---
+layout: post
+title: WRT54GS V3复活记
+---
+<p>在淘宝上买个了WRT54GS，准备刷机玩，结果当晚就弄得崩溃，刷了个DualWAN R2的包，直接变砖。ping不通，电源灯闪烁。到网上找到不少有关复活的文章，终于成功救活。</p> <p>复活需要以下工具：</p> <ul> <li>非常细小的螺丝刀或者铁针</li> <li>螺丝刀</li> <li>一台电脑</li> <li>到网上下载一个图形界面的tftp，或者windows自带的也行</li> <li>下载dd-wrt的tftp版固件，命名为ddwrt.bin</li></ul> <p>复活的步骤：</p> <ol> <li>将路由器拆开，露出主板</li> <li>找到flash芯片，一般来说里面有3块芯片，一块是cpu，一块是64m ram，一块是8m rom，cpu上写了broadcom，应该不会弄错，别去动它。我这里的ram是nanya的，rom不知道是哪个杂牌（估计我买到了假货）。</li> <li>插上网线，电脑设置ip为192.168.1.11，子网掩码255.255.255.0，其余不用设置。</li> <li>电脑上运行ping -t&nbsp; 192.168.1.1，不用理会出错信息</li> <li>从芯片上小圆点逆时针数，找到rom芯片的第5针和第6针，用铁针将它们短接</li> <li>插上电源，1-2秒后，拿开铁针</li> <li>这时候电脑上应该会有ping通了的消息，否则重复5，6步<br><img style="background-image: none; border-bottom: 0px; border-left: 0px; margin: 0px; padding-left: 0px; padding-right: 0px; display: inline; border-top: 0px; border-right: 0px; padding-top: 0px" title="image" border="0" alt="image" src="http://hyq.me/wp-content/uploads/2012/08/image_thumb.png" width="244" height="32"></li> <li>运行tftp刷机，图形界面不哆嗦，如果是windows自带的，运行tftp -i 192.168.1.1 PUT ddwrt.bin</li> <li>等待刷机完成后，将电脑ip改为自动获取</li></ol>

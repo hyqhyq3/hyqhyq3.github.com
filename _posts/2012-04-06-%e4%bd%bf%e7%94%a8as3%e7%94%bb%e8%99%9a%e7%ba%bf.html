@@ -1,0 +1,13 @@
+---
+layout: post
+title: 使用AS3画虚线
+---
+我找了一下网上画虚线的方式，发现都是一段一段地拼起来的，非常麻烦，于是想到了一种更好的画虚线的方式，使用黑白交错的矩形（红白交错也行，主要决定虚线的颜色）。
+<pre lang="as">var b:BitmapData = new BitmapData(10,10,false);
+graphics.lineStyle(1);
+b.fillRect(new Rectangle(0,0,5,5), 0x000000);
+b.fillRect(new Rectangle(5,5,5,5), 0x000000);
+graphics.lineBitmapStyle(b,null,true);
+graphics.beginFill(0xff0000, 0);
+graphics.drawRect(start.x, start.y, start.width, start.height);
+graphics.endFill();</pre>

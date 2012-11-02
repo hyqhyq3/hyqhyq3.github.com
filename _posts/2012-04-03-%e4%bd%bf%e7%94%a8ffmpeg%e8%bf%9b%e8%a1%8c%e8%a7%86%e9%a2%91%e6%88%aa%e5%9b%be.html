@@ -1,0 +1,105 @@
+---
+layout: post
+title: 使用ffmpeg进行视频截图
+---
+<p>今天无聊，便想研究一下ffmpeg，先实现一个视频截图功能。</p> <p>由于最新版的ffmpeg更改了部分接口，原来网上流传的一些用法已经失效了，比如av_open_input_file()改成了avformat_open_input()。我通过查看ffmpeg.c的源码，找到了这些新的用法。</p>
+<pre lang="c++">
+//ffmpeg.cpp : 定义控制台应用程序的入口点。
+
+#include "stdafx.h"
+
+void SaveFrame(AVFrame *pFrame, int width, int height, int iFrame)  
+{  
+    FILE *pFile;  
+    char szFilename[32];  
+    int y;  
+
+    // Open file  
+    sprintf(szFilename, "a.ppm", iFrame);  
+    pFile = fopen(szFilename, "wb");  
+    if (pFile == NULL)  
+        return;  
+
+    // Write header  
+    fprintf(pFile, "P6\n%d %d\n255\n", width, height);  
+
+    // Write pixel data  
+    for (y = 0; y < height; y++)  
+        fwrite(pFrame->data[0] + y * pFrame->linesize[0], 1, width * 3/* 每个像素3个字节 */, pFile);  
+
+    // Close file  
+    fclose(pFile);  
+}  
+
+
+int _tmain(int argc, _TCHAR* argv[])
+{
+    AVCodecContext * codecCtx;
+    
+    av_register_all();
+    AVFormatContext *formatCtx = avformat_alloc_context();
+    char * filename = "e:\\1.mkv";
+    if(avformat_open_input(&formatCtx, filename, NULL, NULL)) {
+        printf("cannot open file");
+        exit(1);
+    }
+    if(av_find_stream_info(formatCtx) < 0) {
+        printf("cannot find stream");
+        exit(1);
+    }
+
+    int i,videoStream = -1 ;AVCodec *codec;
+    AVFrame * picture =  avcodec_alloc_frame();
+    AVPacket pkt;
+    av_dump_format(formatCtx,0,filename,0);
+    for(i = 0; i < formatCtx->nb_streams; i++) {
+        if(formatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO)
+        {
+            videoStream = i;
+            break;
+        }
+    }
+    if(videoStream == -1) {
+        printf("file has no video stream");
+        exit(1);
+    }
+    
+    codecCtx = formatCtx->streams[videoStream]->codec;
+    codec = avcodec_find_decoder(codecCtx->codec_id);
+    avcodec_open(codecCtx, codec);
+
+    //如果取到一帧，那么got_frame为1
+    int got_frame = 0;
+    while(got_frame == 0) {
+        //每次读取一个packet，多个packet里面包含一个完整的frame
+        if(av_read_frame(formatCtx, &pkt)<0){
+            printf("cannot read frame");
+            exit(1);
+        }
+        avcodec_decode_video2(codecCtx, picture, &got_frame, &pkt);
+    }
+    
+    uint8_t *buffer;
+    int size = avpicture_get_size(PIX_FMT_RGB24, picture->width, picture->height);
+    buffer = (uint8_t *)malloc(size);
+
+    AVFrame *rgbFrame = avcodec_alloc_frame();
+
+    avpicture_fill((AVPicture*)rgbFrame, buffer, PIX_FMT_RGB24, picture->width, picture->height);
+    
+    SwsContext *swsCtx = sws_getContext(
+        picture->width,picture->height, codecCtx->pix_fmt, 
+        picture->width,picture->height,PIX_FMT_RGB24,SWS_BICUBIC,NULL,NULL,NULL);
+
+    sws_scale(swsCtx, picture->data, picture->linesize, 0, picture->height, rgbFrame->data, rgbFrame->linesize);
+    SaveFrame(rgbFrame,picture->width,picture->height,1);
+
+    av_free(picture);
+    av_free(rgbFrame);
+    avcodec_close(codecCtx);
+    av_close_input_file(formatCtx);
+    av_free(formatCtx);
+    return 0;
+}
+
+</pre>

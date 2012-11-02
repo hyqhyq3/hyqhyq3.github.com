@@ -1,0 +1,17 @@
+---
+layout: post
+title: 使用ffmpeg和shntool合并mp3
+---
+<p>网上流传着一种使用copy /b filea.mp3+file2.mp3 file.mp3这种方式合并MP3，我试了一下，可以正常合并，但是在chome浏览器里面只能显示第一曲的时间，foobar里面也不能正常显示。可能是mp3文件的头里面包含了文件的长度，导致某些播放器不认后面那段音乐。</p> <p>然后我到网上找合并的方法，发现都不怎么令人满意，都是各种软件，结果好使的没几个。于是自己写了一个脚本用于合并MP3</p>  <pre lang="shell">
+#!/bin/bash
+
+rm *.wav output*
+
+for i in *.mp3
+do
+    ffmpeg -i "$i" "$i.wav"
+done
+
+shntool join *.wav
+ffmpeg -i joined.wav -ab 256k output.mp3
+</pre>

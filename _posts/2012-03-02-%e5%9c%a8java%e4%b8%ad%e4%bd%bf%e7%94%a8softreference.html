@@ -1,0 +1,5 @@
+---
+layout: post
+title: 在Java中使用SoftReference
+---
+<p>上次在Android代码里面使用了SoftReference，想简化缓存的机制，结果今天出问题了。缓存的东西老是拿不出来，我怀疑是SoftReference里面的Bitmap被回收了。</p>  <p>我仔细查阅了一些有关SoftReference的资料（实际上没查阅多少），都说SoftReference只有在内存不够的情况下才被删除，但是为啥我的SoftReference在内存还剩400M的时候就被删除了呢？</p>  <p>想来想去都想不到问题的原因，不过既然我要用到它了，就直接引用了吧，于是将SoftReference引用的Bitmap加到一个其他的容器里面，就没有出现这种被回收的状况了</p>

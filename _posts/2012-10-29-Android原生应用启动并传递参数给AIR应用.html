@@ -1,0 +1,70 @@
+---
+layout: post
+title: Android原生应用启动并传递参数给AIR应用
+wordpress_id: 236
+category: 技术
+tags: Android AIR
+
+---
+
+使用Android运行AIR应用时，有时需要用Android启动AIR应用并传递参数给它。Android传递参数一般使用Intent
+
+
+
+<pre><code>Intent i = new Intent(Intent.ACTION_VIEW, "http://baidu.com");
+startActivity(i);
+</code></pre>
+
+但是如何使用这种方法来启动AIR应用呢？
+<!-- more -->
+
+
+
+<ol>
+<li>首先需要在AIR应用的-app.xml文件里面的android标签内加上intent-filter
+
+
+
+<pre><code>&lt;android&gt;
+&lt;manifestAdditions&gt;&lt;![CDATA[
+    &lt;manifest android:installLocation="auto"&gt;
+
+        &lt;uses-permission android:name="android.permission.INTERNET"/&gt;
+
+        &lt;application android:enabled="true"&gt;
+            &lt;activity android:name=".AppEntry"&gt;
+                &lt;intent-filter&gt;
+                    &lt;action android:name="android.intent.action.VIEW" /&gt;
+                    &lt;category android:name="android.intent.category.BROWSABLE"/&gt; 
+                    &lt;category android:name="android.intent.category.DEFAULT"/&gt; 
+                    &lt;data android:scheme="hyq"/&gt; 
+                &lt;/intent-filter&gt;
+            &lt;/activity&gt;
+        &lt;/application&gt;
+    &lt;/manifest&gt;
+
+]]&gt;
+&lt;/manifestAdditions&gt;
+&lt;/android&gt;
+</code></pre></li>
+<li>在Android中写入调用AIR的代码
+    Intent i = new Intent(Intent.ACTION_VIEW, "hyq:param1,param2");
+    startActivity(i);
+
+</li>
+<li>在AIR程序中接受参数
+
+
+
+<pre><code>NativeApplication.nativeApplication.addEventListener(InvokeEvent.INVOKE, onInvoke);
+......
+protected function onInvoke(event:InvokeEvent):void
+{
+        trace(event.arguments);// 这里的event.arguments是[“hyq:param1,param2”]
+}
+</code></pre></li>
+</ol>
+
+4.解析并处理参数
+
+

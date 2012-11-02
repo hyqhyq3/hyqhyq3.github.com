@@ -1,0 +1,8 @@
+---
+layout: post
+title: FMS序列号错误导致不能连接服务器
+---
+安装FMS4.0的时候，输入了Flash Media Stream Server的序列号，导致FMS程序无法运行，客户端连接服务器时提示服务器拒绝连接，在服务器的日志里面包含
+<pre>Application (gsMeeting_rtmp) is not a valid signed application; loading access denied. -
+2011-12-12 20:45:33 20961 (i)2651379 (_defaultRoot_, _defaultVHost_) : Application (gsMeeting_rtmp/1) is not a valid signed application; loading access denied.</pre>
+这个就是因为输错了序列号引起的，卸载后重装Flash Media Interactive Server，然后完美解决这个问题

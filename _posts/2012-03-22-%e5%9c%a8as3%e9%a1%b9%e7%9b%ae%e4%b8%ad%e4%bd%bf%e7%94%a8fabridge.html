@@ -1,0 +1,6 @@
+---
+layout: post
+title: 在AS3项目中使用FABridge
+---
+当在AS3项目中添加的FABridge的时候，会发现找不到mx.core.collections等包。通过在Flex项目里面的寻找，发现这个包是处于framework.swc里面的。
+于是在项目的构建路径里面加入flex sdk的framework，就可以正常使用FABridge了。

@@ -1,0 +1,5 @@
+---
+layout: post
+title: 终于搞定了利用Flex发布博客
+---
+<p>用了那个as3-rpclib作为XML-RPC的库连接wordpress发文章，结果每次都显示文档类型不对。调试了一个下午，后来在网络监视器里面发现倒数第二个参数，本应该是post的内容的，结果只显示了一个null。跟踪到相应的代码，发现IXMLRPCStruct这个接口并没有任何类实现，也就是说这个库不能支持Struct（？？？！！！）。仔细一看，其实相应部分的代码已经都有了，于是我将tobject is IXMLRPCStruct改成了tobject is Object，然后再运行我的程序。bingo，全部ok了。</p>  <p>看来这种开源的代码用的时候得小心点，一不小心就被坑了。这让我想起大牛们写程序的时候，碰到编译器的bug，果然是层次之间的差别啊。</p>
