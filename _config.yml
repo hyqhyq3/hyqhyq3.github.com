@@ -15,6 +15,7 @@ author :
   name : Yangqi Huang
   email : i@hyq.me
   github : hyqhyq3
+  weibo : huangyangqi
   
 # The production_url is only used when full-domain names are needed
 # such as sitemap.txt 
@@ -77,9 +78,11 @@ JB :
   # Set 'provider' to false to turn commenting off globally.
   #
   comments :
-    provider : disqus
+    provider : duoshuo
     disqus :
       short_name : jekyllbootstrap
+    duoshuo :
+      short_name : hyq
     livefyre :
       site_id : 123
     intensedebate :
