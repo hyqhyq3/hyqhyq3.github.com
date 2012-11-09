@@ -49,10 +49,20 @@
 					<ul>
 						<li class="contact"><address><span class="author fn n">{{ site.author.name }}</span> - <span class="fn email">{{ site.author.email }}</span></address></li>
 						<li class="github"><a href="http://github.com/{{ site.author.github }}/" rel="me">github.com/{{ site.author.github }}</a></li>
-						<li class="twitter"><a href="http://weibo.com/{{ site.author.weibo }}/" rel="me">weibo.com/{{ site.author.weibo }}</a></li>
+						<li class="weibo"><a href="http://weibo.com/{{ site.author.weibo }}/" rel="me">weibo.com/{{ site.author.weibo }}</a></li>
 						<li class="rss"><a href="http://feeds.feedburner.com/{{ site.author.feedname }}">Subscribe to RSS Feed</a></li>
 					</ul>
 				</div><!-- misc -->
+
+				<div class="misc friends">
+					<h4>Links</h4>
+					<ul>
+						{% for link in site.links %}
+							<li class="link"><a href="{{link.url}}" title="{{ link.name }}">{{ link.name }}</a></li>
+						{% endfor %}
+					</ul>
+				</div><!-- misc -->
+
 				<p class="licence">
 					Theme: <a href="http://layouts-the.me">the_minimum Mod</a> based on <a href="http://jekyllbootstrap.com/">Jekyll-bootstrap</a>.<br>
 					Powered by <a href="https://github.com/mojombo/jekyll">Jekyll</a>.
