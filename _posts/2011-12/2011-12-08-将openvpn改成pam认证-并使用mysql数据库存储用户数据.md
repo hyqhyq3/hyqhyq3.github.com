@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 将OpenVPN改成PAM认证，并使用mysql数据库存储用户数据
+title: 将OpenVPN改成PAM认证-并使用mysql数据库存储用户数据
 category: 服务器
 tags: linux openvpn pam mysql
 ---
