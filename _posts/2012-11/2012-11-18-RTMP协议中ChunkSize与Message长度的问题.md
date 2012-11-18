@@ -11,7 +11,7 @@ category: RTMP
 经过各种测试，发现只有在Message的长度大于128的时候，才会出现连接不上的情况。然后以"RTMP 128"为关键词搜索，没想到还真发现了问题的所在。
 是因为Chunk的长度默认只有128，数据太长时，需要进行分割，也就是将一个Message分割成多个Chunk。
 	
-第一个Chunk的fmt为3，后续的Chunk的fmt为0
+第一个Chunk的fmt为0，后续的Chunk的fmt为3
 	
 原始Message：
 	
