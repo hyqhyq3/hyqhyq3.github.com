@@ -21,10 +21,10 @@ html {
 	background-position: 0 0;
 	background-color: #e2e2de;
 }
-
+ 
 .body {
 	.unit-body {
-		background-color: #fafafa;
+		background-color: #fafafa; 
 	}
 }
 
@@ -66,12 +66,15 @@ pre {
 /* HEADER
 --------------------------------------------------------------------------------- */
 .the-header {
+	font-family: @rocksalt; 
 	.logo {
-		font-family: @webfont;
+
+		//font-family: @webfont;
 		margin: 0;
 		a:visited { color: @main-font-color; }
 	}
 	.nav-global {
+		
 		text-transform: uppercase;
 		.logo { text-transform: none; }
 		.forkme {
@@ -89,6 +92,7 @@ pre {
 			border-bottom: 5px solid rgba(21, 25, 25, 0.8);
 			margin-bottom: 21px;
 			h1 {
+				
 				color: @main-font-color;
 				margin-top: 0;
 				margin-bottom: 0;
@@ -283,6 +287,10 @@ pre {
 /* FOOTER
 ----------------------------------------------- */
 .the-footer {
+	h4{
+		font-family:@rocksalt;
+		color:#666666;
+	}  
 	a {
 		&:link {
 			color: @accent-color;
