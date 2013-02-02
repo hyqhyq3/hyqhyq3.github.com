@@ -30,6 +30,8 @@ production_url : http://www.hyq.me
 links :
   - name : 'Dom Chen'  
     url : 'http://domlib.com'
+  - name : 'AVPlayer.org社区'
+    url : 'http://avplayer.org'
 
 # All Jekyll-Bootstrap specific configurations are namespaced into this hash
 #
