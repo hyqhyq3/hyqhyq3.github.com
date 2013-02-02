@@ -32,6 +32,8 @@ links :
     url : 'http://domlib.com'
   - name : 'AVPlayer.org社区'
     url : 'http://avplayer.org'
+  - name : 'microcai'
+    url : 'http://microcai.org'
 
 # All Jekyll-Bootstrap specific configurations are namespaced into this hash
 #
