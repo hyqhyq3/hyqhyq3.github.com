@@ -10,6 +10,8 @@ markdown: rdiscount
 # Themes are encouraged to use these universal variables 
 # so be sure to set them if your theme uses them.
 #
+name : hyq
+url : www.hyq.me
 title : hyq
 tagline: 在编码中寻找乐趣
 author :
