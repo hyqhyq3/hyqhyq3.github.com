@@ -9,7 +9,7 @@ tags: FFmpeg
 
 本文用[FFmpeg](http://ffmpeg.org)进行音频解码,用[PortAudio](http://www.portaudio.com)播放声音.
 
-{% highlight c++ %}
+```cpp
 
 /// main.cpp
 
@@ -17,13 +17,96 @@ tags: FFmpeg
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
+#include <libswresample/swresample.h>
 }
 
 // 这里是PortAudio的头文件
 #include <portaudio.h>
-
+#include <assert.h>
 #include <iostream>
 
+struct AudioContext {
+	AVCodecContext* codecContext;
+	SwrContext* swrContext;
+	ReSampleContext* resamplerContext;
+};
+
+static
+void audio_copy(AudioContext *context,  AVFrame *dst, AVFrame* src)
+{
+	int nb_sample;
+	int dst_buf_size;
+	int out_channels;
+	int bytes_per_sample = 0;
+
+	dst->linesize[0] = src->linesize[0];
+	*dst = *src;
+	dst->data[0] = NULL;
+	dst->type = 0;
+
+	/* 备注: FFMIN(codecContext->channels, 2); 会有问题, 因为swr_alloc_set_opts的out_channel_layout参数. */
+	out_channels = context->codecContext->channels;
+
+	bytes_per_sample = av_get_bytes_per_sample(context->codecContext->sample_fmt);
+	/* 备注: 由于 src->linesize[0] 可能是错误的, 所以计算得到的nb_sample会不正确, 直接使用src->nb_samples即可. */
+	nb_sample = src->nb_samples;/* src->linesize[0] / codecContext->channels / bytes_per_sample; */
+	bytes_per_sample = av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
+	dst_buf_size = nb_sample * bytes_per_sample * out_channels;
+	dst->data[0] = (uint8_t*) av_malloc(dst_buf_size);
+	assert(dst->data[0]);
+	avcodec_fill_audio_frame(dst, out_channels, AV_SAMPLE_FMT_S16, dst->data[0], dst_buf_size, 0);
+
+	/* 重采样到AV_SAMPLE_FMT_S16格式. */
+	if (context->codecContext->sample_fmt != AV_SAMPLE_FMT_S16)
+	{
+		if (!context->swrContext)
+		{
+			uint64_t in_channel_layout = av_get_default_channel_layout(context->codecContext->channels);
+			uint64_t out_channel_layout = av_get_default_channel_layout(out_channels);
+			context->swrContext = swr_alloc_set_opts(NULL,
+				out_channel_layout, AV_SAMPLE_FMT_S16, context->codecContext->sample_rate,
+				in_channel_layout, context->codecContext->sample_fmt, context->codecContext->sample_rate,
+				0, NULL);
+			swr_init(context->swrContext);
+		}
+
+		if (context->swrContext)
+		{
+			int ret, out_count;
+			out_count = dst_buf_size / out_channels / av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
+			ret = swr_convert(context->swrContext, dst->data, out_count, const_cast<const uint8_t**>(src->data), nb_sample);
+			if (ret < 0)
+				assert(0);
+			src->linesize[0] = dst->linesize[0] = ret * av_get_bytes_per_sample(AV_SAMPLE_FMT_S16) * out_channels;
+			memcpy(src->data[0], dst->data[0], src->linesize[0]);
+		}
+	}
+
+	/* 重采样到双声道. */
+	if (context->codecContext->channels > 2)
+	{
+		if (!context->resamplerContext)
+		{
+			context->resamplerContext = av_audio_resample_init(
+					FFMIN(2, context->codecContext->channels),
+					context->codecContext->channels, context->codecContext->sample_rate,
+					context->codecContext->sample_rate, AV_SAMPLE_FMT_S16, AV_SAMPLE_FMT_S16,
+					16, 10, 0, 0.f);
+		}
+
+		if (context->resamplerContext)
+		{
+			int samples = src->linesize[0] / (av_get_bytes_per_sample(AV_SAMPLE_FMT_S16) * context->codecContext->channels);
+			dst->linesize[0] = audio_resample(context->resamplerContext,
+				(short *) dst->data[0], (short *) src->data[0], samples) * 4;
+		}
+	}
+	else
+	{
+		dst->linesize[0] = dst->linesize[0];
+		memcpy(dst->data[0], src->data[0], dst->linesize[0]);
+	}
+}
 
 int main(int argc, char* argv[]) 
 {
@@ -70,11 +153,15 @@ int main(int argc, char* argv[])
         std::cerr << "cannot open decoder" << std::endl;
         return -1;
     }
-
+    
     // AVPacket是解码前的数据, AVFrame是解码后的数据.
     AVPacket packet;
     AVFrame *frame = avcodec_alloc_frame();
     int got;
+	AudioContext context;
+	context.resamplerContext = NULL;
+	context.swrContext = NULL;
+	context.codecContext = codecContext;
 
     // 下面是初始化PortAudio, 用PortAudio的Blocking API比较简单.
     PaStream *stream;
@@ -83,11 +170,10 @@ int main(int argc, char* argv[])
         paInt16, codecContext->sample_rate, 
         1024, NULL, NULL);
     Pa_StartStream(stream);
-
+	codecContext->sample_fmt;
     int size = 4092;
-    int16_t* buffer = new int16_t[size];
+    uint8_t* buffer = new uint8_t[size * 2];
     int channels = codecContext->channels;
-    
     while(true) {
         // 从文件中读取一帧.
         if(av_read_frame(formatContext, &packet) < 0) {
@@ -106,16 +192,13 @@ int main(int argc, char* argv[])
         if(got) {
             // 因为frame->data[0]表示的是左声道LLL....,frame->data[1]表示右声道RRR...
             // 而PortAudio要求的是LRLRLR....这样的数据排布, 所以这里用循环重新将数据复制到buffer中
-            for(int i = 0; i < frame->nb_samples; i++) {
-                for(int j = 0; j < channels; j ++) {
-                    buffer[i*channels + j] = reinterpret_cast<int16_t*>(frame->data[j])[i];
-                }
-            }
-            Pa_WriteStream(stream, buffer, frame->nb_samples);
+			AVFrame *dst = avcodec_alloc_frame();
+			audio_copy(&context, dst, frame);
+            Pa_WriteStream(stream, reinterpret_cast<int16_t*>(dst->data[0]), dst->nb_samples);
         }
 
     }
     delete buffer;
     return 0; 
 }
-{% endhighlight %}
+```
