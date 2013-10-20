@@ -38,6 +38,8 @@ links :
     url : 'http://microcai.org'
   - name : 'avplayer官方论坛'
     url : 'http://avboost.com'
+  - name : 'ssy'
+    url : 'http://ssy.me'
 
 # All Jekyll-Bootstrap specific configurations are namespaced into this hash
 #
