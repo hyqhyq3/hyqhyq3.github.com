@@ -1,7 +1,7 @@
 ---
 layout: post
 title: cocos2d-x的GL Calls优化
-category: tech
+category: 技术
 tags: cocos2d-x
 ---
 
