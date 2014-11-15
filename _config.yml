@@ -40,7 +40,8 @@ links :
     url : 'http://avboost.com'
   - name : 'ssy'
     url : 'http://ssy.me'
-
+  - name : '网事已疯'
+    url : 'http://godebug.org'
 # All Jekyll-Bootstrap specific configurations are namespaced into this hash
 #
 JB :
