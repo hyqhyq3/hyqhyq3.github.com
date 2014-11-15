@@ -42,6 +42,8 @@ links :
     url : 'http://ssy.me'
   - name : '网事已疯'
     url : 'http://godebug.org'
+  - name : '张小凡的博客'
+    url : 'http://hyb1.cnblogs.com/'
 # All Jekyll-Bootstrap specific configurations are namespaced into this hash
 #
 JB :
