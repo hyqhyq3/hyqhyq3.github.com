@@ -53,7 +53,7 @@ phrase\_parser会改变first的值，表示当前解析到哪一个字符。
 
 
 第三个参数就是解析器的grammar，用的是EBNF语法（应该说是EBNF for spirit）。
-这里的`*(qi::int_ >> qi::lit(','))`就是普通EBNF的`grammar ::= ( int ',' ) * `，由于c＋＋算符重载的限制，kleene闭包被写在了句子的前面。同样因为c++的限制，短语之间需要使用<<连接。[qi::int_的文档](http://www.boost.org/doc/libs/1_57_0/libs/spirit/doc/html/spirit/qi/quick_reference/qi_parsers/numeric.html) [*的文档](http://www.boost.org/doc/libs/1_57_0/libs/spirit/doc/html/spirit/qi/quick_reference/qi_parsers/operator.html)
+这里的`*(qi::int_ >> qi::lit(','))`就是普通EBNF的`grammar ::= ( int ',' ) * `，由于c＋＋算符重载的限制，kleene闭包被写在了句子的前面。同样因为c++的限制，短语之间需要使用>>连接。[qi::int_的文档](http://www.boost.org/doc/libs/1_57_0/libs/spirit/doc/html/spirit/qi/quick_reference/qi_parsers/numeric.html) [*的文档](http://www.boost.org/doc/libs/1_57_0/libs/spirit/doc/html/spirit/qi/quick_reference/qi_parsers/operator.html)
 
 第四个参数skipper表示可以忽略的字符，这里的ascii::space，表示空格，tab等都是可以忽略的。
 
