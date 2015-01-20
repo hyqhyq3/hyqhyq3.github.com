@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 使用spirit处理转移符
+title: 使用spirit处理转义符
 category: 技术
 tags: boost spirit
 ---
