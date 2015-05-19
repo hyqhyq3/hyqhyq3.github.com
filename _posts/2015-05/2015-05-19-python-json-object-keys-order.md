@@ -10,7 +10,7 @@ tags: python json
 经手工调整json后，才知道cocostudio对于json的格式有要求（有病）。需要将__type放到object的开头。
 但是使用json的sort_keys并不能解决问题，__type被放到了ZOrder后。
 
-又去网上一阵搜索，找到了一个OrderedDict，在解析json时加上参数object_pairs_hook=collections.OrderedDict。
+又去网上一阵搜索，找到了一个OrderedDict，在解析json时加上参数`object_pairs_hook=collections.OrderedDict`。
 
 
 ```python
