@@ -1,8 +1,4 @@
 ---
-published: false
----
-
----
 layout: post
 title: 将boost.spirit的语义动作与属性结合使用
 category: 
