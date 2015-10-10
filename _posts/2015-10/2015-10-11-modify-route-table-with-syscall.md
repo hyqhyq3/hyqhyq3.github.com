@@ -12,7 +12,7 @@ tags: unix
 以下是详细代码：
 
 
-```
+```c
 #include <net/route.h>
 #include <arpa/inet.h>
 #define BUFLEN (sizeof(struct rt_msghdr) + 512)
