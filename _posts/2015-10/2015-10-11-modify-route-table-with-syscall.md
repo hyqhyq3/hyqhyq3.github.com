@@ -58,7 +58,7 @@ int main(int argc, char** argv)
 }
 ```
 
-这段代码比较重要的就是rtmsg_hdr后面的sockaddr数据的顺序是有规定的。按照RTA_DST，RTA_GATEWAY，RTA_NETMASK……的顺序。
+这段代码比较重要的就是`rtmsg_hdr`后面的`sockaddr`数据的顺序是有规定的。按照`RTA_DST`，`RTA_GATEWAY`，`RTA_NETMASK`……的顺序。
 
 另外，在读取路由表的时候，返回的数据也按照这个格式。
 
