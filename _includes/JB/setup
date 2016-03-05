@@ -12,11 +12,12 @@
       {% assign BASE_PATH = nil %}
       {% assign HOME_PATH = "/" %}
     {% endif %}
-
+	as {{ site.JB.ASSET_PATH }}
+	as {{ page.theme }}
     {% if site.JB.ASSET_PATH %}
       {% assign ASSET_PATH = site.JB.ASSET_PATH %}
     {% else %}
-      {% capture ASSET_PATH %}{{ BASE_PATH }}/assets/themes/{{ page.theme.name }}{% endcapture %}
+      {% capture ASSET_PATH %}{{ BASE_PATH }}/assets/themes/the-program{% endcapture %}
     {% endif %}  
   {% endif %}
-{% endcapture %}{% assign jbcache = nil %}
+{% endcapture %}
